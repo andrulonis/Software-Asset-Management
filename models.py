@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, fsolve
 import numpy as np
 
 def normalizeData(data):
@@ -66,38 +66,60 @@ y_data = normalizeData(total_defects)
 xdata = np.asarray(xs)
 ydata = np.asarray(y_data)
 
+fit_x = np.arange(176)
+
+popt, pcov = curve_fit(rayleigh_cdf, xdata, ydata, bounds=[(0.001),(np.inf)])
+fit_y = rayleigh_cdf(fit_x, *popt)
+day_of_x_defects = fit_x[fit_y.searchsorted(0.98, 'left')]
 plt.plot(xdata, ydata, 'b-', label='data')
-popt, pcov = curve_fit(rayleigh_cdf, xdata, ydata, bounds=[(0.01),(np.inf)])
-plt.plot(xdata, rayleigh_cdf(xdata, *popt), 'r-', label='fit: a=%5.3f' % tuple(popt))
-plt.xlabel('x')
-plt.ylabel('y')
+plt.axhline(y=0.98, color='g', linestyle='-')
+plt.axvline(x=day_of_x_defects, color='y', linestyle='-')
+plt.text(day_of_x_defects + 10, -0.05, f'{day_of_x_defects}', color='y', fontsize=12, ha='center', va='bottom')
+plt.plot(fit_x, fit_y, 'r-', label='fit: a=%5.3f' % tuple(popt))
+plt.xlabel('Days')
+plt.ylabel('Cumulative sum of defects [%]')
 plt.legend()
 plt.savefig('figures/fits/rayleigh.png')
 plt.close()
 
+popt, pcov = curve_fit(weibull_cdf, xdata, ydata, bounds=[(0.001, 0.001),(np.inf, np.inf)])
+fit_y = weibull_cdf(fit_x, *popt)
+day_of_x_defects = fit_x[fit_y.searchsorted(0.98, 'left')]
 plt.plot(xdata, ydata, 'b-', label='data')
-popt, pcov = curve_fit(weibull_cdf, xdata, ydata, bounds=[(0.01, 0.01),(np.inf, np.inf)])
-plt.plot(xdata, weibull_cdf(xdata, *popt), 'r-', label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
-plt.xlabel('x')
-plt.ylabel('y')
+plt.axhline(y=0.98, color='g', linestyle='-')
+plt.axvline(x=day_of_x_defects, color='y', linestyle='-')
+plt.text(day_of_x_defects + 10, -0.05, f'{day_of_x_defects}', color='y', fontsize=12, ha='center', va='bottom')
+plt.plot(fit_x, fit_y, 'r-', label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
+plt.xlabel('Days')
+plt.ylabel('Cumulative sum of defects [%]')
 plt.legend()
 plt.savefig('figures/fits/weibull.png')
 plt.close()
 
+popt, pcov = curve_fit(logistic_cdf, xdata, ydata, bounds=[(-np.inf, 0.001),(np.inf, np.inf)])
+fit_y = logistic_cdf(fit_x, *popt)
+day_of_x_defects = fit_x[fit_y.searchsorted(0.98, 'left')]
 plt.plot(xdata, ydata, 'b-', label='data')
-popt, pcov = curve_fit(logistic_cdf, xdata, ydata, bounds=[(-np.inf, 0.01),(np.inf, np.inf)])
-plt.plot(xdata, logistic_cdf(xdata, *popt), 'r-', label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
-plt.xlabel('x')
-plt.ylabel('y')
+plt.axhline(y=0.98, color='g', linestyle='-')
+plt.axvline(x=day_of_x_defects, color='y', linestyle='-')
+plt.text(day_of_x_defects + 10, -0.05, f'{day_of_x_defects}', color='y', fontsize=12, ha='center', va='bottom')
+plt.plot(fit_x, fit_y, 'r-', label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
+plt.xlabel('Days')
+plt.ylabel('Cumulative sum of defects [%]')
 plt.legend()
 plt.savefig('figures/fits/logistic.png')
 plt.close()
 
-plt.plot(xdata, ydata, 'b-', label='data')
 popt, pcov = curve_fit(lyu_cdf, xdata, ydata)
-plt.plot(xdata, lyu_cdf(xdata, *popt), 'r-', label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
-plt.xlabel('x')
-plt.ylabel('y')
+fit_y = lyu_cdf(fit_x, *popt)
+day_of_x_defects = fit_x[fit_y.searchsorted(0.98, 'left')]
+plt.plot(xdata, ydata, 'b-', label='data')
+plt.axhline(y=0.98, color='g', linestyle='-')
+plt.axvline(x=day_of_x_defects, color='y', linestyle='-')
+plt.text(day_of_x_defects + 10, -0.05, f'{day_of_x_defects}', color='y', fontsize=12, ha='center', va='bottom')
+plt.plot(fit_x, fit_y, 'r-', label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
+plt.xlabel('Days')
+plt.ylabel('Cumulative sum of defects [%]')
 plt.legend()
 plt.savefig('figures/fits/lyu.png')
 plt.close()
