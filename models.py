@@ -19,15 +19,22 @@ with open("dataset.txt") as file:
 
 total_defects = []
 daily_defects = []
+weekly_defects = []
+weekly = 0
 total = 0
 for x in range(1,103):
     count = defects.count(x)
+    weekly += count
     total += count
     daily_defects.append(count)
     total_defects.append(total)
+    if(x % 7 == 0):
+        weekly_defects.append(weekly)
+        weekly = 0
 print(str(total_defects))
 
 xs = [x for x in range(len(total_defects))]
+xsw = [x for x in range(len(weekly_defects))]
 
 plt.plot(xs, total_defects)
 plt.savefig('figures/total_defects.png')
@@ -40,3 +47,8 @@ plt.close()
 fig, ax = plt.subplots()
 ax.hist(daily_defects)
 plt.savefig('figures/daily_defects_hist.png')
+plt.close()
+
+plt.bar(xsw, weekly_defects)
+plt.savefig('figures/weekly_defects.png')
+plt.close()
