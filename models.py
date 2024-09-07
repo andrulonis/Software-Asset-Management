@@ -1,7 +1,10 @@
 import matplotlib.pyplot as plt
-# from scipy.optimize import curve_fit
-# from scipy.stats import weibull_min
+from scipy.optimize import curve_fit
+from scipy.stats import weibull_min
 import numpy as np
+
+def NormalizeData(data):
+    return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 def rayleigh_cdf(t, a):
     return 1 - np.exp(-(pow(t, 2) / 2 * pow(a, 2)))
@@ -56,4 +59,20 @@ plt.close()
 
 plt.bar(xsw, weekly_defects)
 plt.savefig('figures/weekly_defects.png')
+plt.close()
+
+y_data = NormalizeData(total_defects)
+
+xdata = np.asarray(xs)
+ydata = np.asarray(y_data)
+
+plt.plot(xdata, ydata, 'b-', label='data')
+
+popt, pcov = curve_fit(weibull_cdf, xdata, ydata)
+plt.plot(xdata, weibull_cdf(xdata, *popt), 'r-', label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+
+plt.savefig('figures/weibull.png')
 plt.close()
