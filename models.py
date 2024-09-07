@@ -6,7 +6,7 @@ def normalizeData(data):
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 def rayleigh_cdf(t, a):
-    return 1 - np.exp(-(pow(t, 2) / 2 * pow(a, 2)))
+    return 1 - np.exp(-(pow(t, 2) / (2 * pow(a, 2))))
 
 def weibull_cdf(t, a, b):
     return 1 - np.exp(-(pow(t / a, b)))
