@@ -3,11 +3,17 @@ import matplotlib.pyplot as plt
 # from scipy.stats import weibull_min
 import numpy as np
 
-def rayleigh(x, a, b):
-    return a * x * np.exp(-b * pow(x, 2))
+def rayleigh_cdf(t, a):
+    return 1 - np.exp(-(pow(t, 2) / 2 * pow(a, 2)))
 
-def normal(t, a, b, c):
-    return np.exp(a * pow(t, 2) + b * t + c)
+def weibull_cdf(t, a, b):
+    return 1 - np.exp(-(pow(t / a, b)))
+
+def logistic_cdf(t, a, b):
+    return 1 / (1 + np.exp(-(t - a) / b))
+
+def lyu_cdf(t, n, a, b):
+    return n * (1 - np.exp(-a * t)) / (1 + b * np.exp(-a * t))
 
 defects = [""]
 
@@ -31,7 +37,6 @@ for x in range(1,103):
     if(x % 7 == 0):
         weekly_defects.append(weekly)
         weekly = 0
-print(str(total_defects))
 
 xs = [x for x in range(len(total_defects))]
 xsw = [x for x in range(len(weekly_defects))]
