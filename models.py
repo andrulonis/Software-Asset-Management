@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
-from scipy.stats import weibull_min
+# from scipy.optimize import curve_fit
+# from scipy.stats import weibull_min
 import numpy as np
 
 def rayleigh(x, a, b):
@@ -30,14 +30,13 @@ print(str(total_defects))
 xs = [x for x in range(len(total_defects))]
 
 plt.plot(xs, total_defects)
-plt.show()
+plt.savefig('figures/total_defects.png')
 plt.close()
 
 plt.bar(xs, daily_defects)
-plt.show()
+plt.savefig('figures/daily_defects_bar.png')
 plt.close()
 
 fig, ax = plt.subplots()
 ax.hist(daily_defects)
-
-plt.show()
+plt.savefig('figures/daily_defects_hist.png')
