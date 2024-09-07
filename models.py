@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-from scipy.stats import weibull_min
 import numpy as np
 
-def NormalizeData(data):
+def normalizeData(data):
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 def rayleigh_cdf(t, a):
@@ -15,8 +14,9 @@ def weibull_cdf(t, a, b):
 def logistic_cdf(t, a, b):
     return 1 / (1 + np.exp(-(t - a) / b))
 
-def lyu_cdf(t, n, a, b):
-    return n * (1 - np.exp(-a * t)) / (1 + b * np.exp(-a * t))
+def lyu_cdf(t, a, b): # def lyu_cdf(t, n, a, b):
+    # return n * (1 - np.exp(-a * t)) / (1 + b * np.exp(-a * t))
+    return 1 * (1 - np.exp(-a * t)) / (1 + b * np.exp(-a * t))
 
 defects = [""]
 
@@ -61,18 +61,43 @@ plt.bar(xsw, weekly_defects)
 plt.savefig('figures/weekly_defects.png')
 plt.close()
 
-y_data = NormalizeData(total_defects)
+y_data = normalizeData(total_defects)
 
 xdata = np.asarray(xs)
 ydata = np.asarray(y_data)
 
 plt.plot(xdata, ydata, 'b-', label='data')
+popt, pcov = curve_fit(rayleigh_cdf, xdata, ydata, bounds=[(0.01),(np.inf)])
+plt.plot(xdata, rayleigh_cdf(xdata, *popt), 'r-', label='fit: a=%5.3f' % tuple(popt))
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+plt.savefig('figures/fits/rayleigh.png')
+plt.close()
 
-popt, pcov = curve_fit(weibull_cdf, xdata, ydata)
+plt.plot(xdata, ydata, 'b-', label='data')
+popt, pcov = curve_fit(weibull_cdf, xdata, ydata, bounds=[(0.01, 0.01),(np.inf, np.inf)])
 plt.plot(xdata, weibull_cdf(xdata, *popt), 'r-', label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
 plt.xlabel('x')
 plt.ylabel('y')
 plt.legend()
+plt.savefig('figures/fits/weibull.png')
+plt.close()
 
-plt.savefig('figures/weibull.png')
+plt.plot(xdata, ydata, 'b-', label='data')
+popt, pcov = curve_fit(logistic_cdf, xdata, ydata, bounds=[(-np.inf, 0.01),(np.inf, np.inf)])
+plt.plot(xdata, logistic_cdf(xdata, *popt), 'r-', label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+plt.savefig('figures/fits/logistic.png')
+plt.close()
+
+plt.plot(xdata, ydata, 'b-', label='data')
+popt, pcov = curve_fit(lyu_cdf, xdata, ydata)
+plt.plot(xdata, lyu_cdf(xdata, *popt), 'r-', label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+plt.savefig('figures/fits/lyu.png')
 plt.close()
