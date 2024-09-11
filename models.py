@@ -14,29 +14,44 @@ def logistic_cdf(t, n, a, b):
 def lyu_cdf(t, n, a, b):
     return n * (1 - np.exp(-a * t)) / (1 + b * np.exp(-a * t))
 
+defect_types = ["Assn/Ck/alg","Misc","Function"]
+
 defects = [""]
+defects_per_type = {}
 
 with open("dataset.txt") as file:
     for line in file:
         x = line.rstrip()
         y = x.partition('\t')[0]
+        defect_type = x.partition('\t')[2].replace("\"","")
         defects.append(int(y))
+        if defect_type not in defects_per_type:
+            defects_per_type[defect_type] = []
+        defects_per_type[defect_type].append(int(y))
 
 total_defects = []
+total_defects_per_type = {}
 daily_defects = []
 weekly_defects = []
 weekly = 0
 total = 0
+total_per_type = {"Assn/Ck/alg":0,"Misc":0,"Function":0}
 for x in range(1,103):
     count = defects.count(x)
     weekly += count
     total += count
     daily_defects.append(count)
     total_defects.append(total)
+    for defect_type in defect_types:
+        count_per_type = defects_per_type[defect_type].count(x)
+        total_per_type[defect_type] += count_per_type
+        if defect_type not in total_defects_per_type:
+            total_defects_per_type[defect_type] = []
+        total_defects_per_type[defect_type].append(total_per_type[defect_type])
     if(x % 7 == 0):
         weekly_defects.append(weekly)
         weekly = 0
-
+        
 xs = [x for x in range(len(total_defects))]
 xsw = [x for x in range(len(weekly_defects))]
 
@@ -72,7 +87,7 @@ plt.text(day_of_x_defects + 12, popt[0]-130, f'{day_of_x_defects}', color='y', f
 plt.plot(fit_x, fit_y, 'r-', label='fit: n=%5.0f, a=%5.3f' % (round(popt[0]), popt[1]))
 plt.title('Rayleigh model')
 plt.xlabel('Days')
-plt.ylabel('Cumulative sum of defects [%]')
+plt.ylabel('Cumulative number of defects')
 plt.legend()
 plt.savefig('figures/fits/rayleigh.png')
 plt.close()
@@ -87,7 +102,7 @@ plt.text(day_of_x_defects + 12, popt[0]-170, f'{day_of_x_defects}', color='y', f
 plt.plot(fit_x, fit_y, 'r-', label='fit: n=%5.0f, a=%5.3f, b=%5.3f' % (round(popt[0]), popt[1], popt[2]))
 plt.title('Weibull model')
 plt.xlabel('Days')
-plt.ylabel('Cumulative sum of defects [%]')
+plt.ylabel('Cumulative number of defects')
 plt.legend()
 plt.savefig('figures/fits/weibull.png')
 plt.close()
@@ -102,7 +117,7 @@ plt.text(day_of_x_defects + 12, popt[0]-130, f'{day_of_x_defects}', color='y', f
 plt.plot(fit_x, fit_y, 'r-', label='fit: n=%5.0f, a=%5.3f, b=%5.3f' % (round(popt[0]), popt[1], popt[2]))
 plt.title('Logistic model')
 plt.xlabel('Days')
-plt.ylabel('Cumulative sum of defects [%]')
+plt.ylabel('Cumulative number of defects')
 plt.legend()
 plt.savefig('figures/fits/logistic.png')
 plt.close()
@@ -115,9 +130,52 @@ plt.axhline(y=0.98*popt[0], color='g', linestyle='-')
 plt.axvline(x=day_of_x_defects, color='y', linestyle='-')
 plt.text(day_of_x_defects + 12, popt[0]-150, f'{day_of_x_defects}', color='y', fontsize=12, ha='center', va='bottom')
 plt.plot(fit_x, fit_y, 'r-', label='fit: n=%5.0f, a=%5.3f, b=%5.3f' % (round(popt[0]), popt[1], popt[2]))
-plt.title('Lyu model')
+plt.title('S-curve model')
 plt.xlabel('Days')
-plt.ylabel('Cumulative sum of defects [%]')
+plt.ylabel('Cumulative number of defects')
 plt.legend()
 plt.savefig('figures/fits/lyu.png')
 plt.close()
+
+for defect_type in [x for x in defect_types if x != "Misc"]:
+    xs = [x for x in range(len(total_defects_per_type[defect_type]))]
+    xdata = np.asarray(xs)
+    ydata = np.asarray(total_defects_per_type[defect_type])
+
+    popt, pcov = curve_fit(weibull_cdf, xdata, ydata, bounds=[(0.001, 0.001, 0.001),(np.inf, np.inf, np.inf)])
+    fit_y = weibull_cdf(fit_x, *popt)
+    day_of_x_defects = fit_x[fit_y.searchsorted(0.98*popt[0], 'left')]
+    plt.plot(xdata, ydata, 'b-', label='data')
+    plt.axhline(y=0.98*popt[0], color='g', linestyle='-')
+    plt.axvline(x=day_of_x_defects, color='y', linestyle='-')
+    plt.text(day_of_x_defects + 12, popt[0]-170, f'{day_of_x_defects}', color='y', fontsize=12, ha='center', va='bottom')
+    plt.plot(fit_x, fit_y, 'r-', label='fit: n=%5.0f, a=%5.3f, b=%5.3f' % (round(popt[0]), popt[1], popt[2]))
+    plt.title(f'Weibull model - {defect_type}')
+    plt.xlabel('Days')
+    plt.ylabel('Cumulative number of defects')
+    plt.legend()
+    plt.savefig(f'figures/fits/weibull_{defect_type.replace("/","")}.png')
+    plt.close()
+
+for defect_type in defect_types:
+    xs = [x for x in range(len(total_defects_per_type[defect_type]))]
+    xdata = np.asarray(xs)
+    ydata = np.asarray(total_defects_per_type[defect_type])
+
+    popt, pcov = curve_fit(lyu_cdf, xdata, ydata, bounds=[(0.001, -np.inf, -np.inf),(np.inf, np.inf, np.inf)], maxfev=5000)
+    fit_y = lyu_cdf(fit_x, *popt)
+    day_of_x_defects = fit_x[fit_y.searchsorted(0.98*popt[0], 'left')]
+    plt.plot(xdata, ydata, 'b-', label='data')
+    plt.axhline(y=0.98*popt[0], color='g', linestyle='-')
+    plt.axvline(x=day_of_x_defects, color='y', linestyle='-')
+    plt.text(day_of_x_defects + 12, popt[0]-170, f'{day_of_x_defects}', color='y', fontsize=12, ha='center', va='bottom')
+    plt.plot(fit_x, fit_y, 'r-', label='fit: n=%5.0f, a=%5.3f, b=%5.3f' % (round(popt[0]), popt[1], popt[2]))
+    plt.title(f'S-curve model - {defect_type}')
+    plt.xlabel('Days')
+    plt.ylabel('Cumulative number of defects')
+    plt.legend()
+    plt.savefig(f'figures/fits/lyu_{defect_type.replace("/","")}.png')
+    plt.close()
+
+
+
